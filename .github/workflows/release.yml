@@ -1,0 +1,86 @@
+name: Build and release
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu
+            runs-on: ubuntu-latest
+          - os: macos
+            runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Create Archive
+        run: |
+          mkdir -p release
+          cp target/release/envsub-rs release/
+          zip -j envsub-rs-${{ matrix.os }}.zip release/envsub-rs
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.os }}
+          path: envsub-rs-${{ matrix.os }}.zip
+
+  release:
+    name: Create Release
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: echo "::set-output name=version::$(grep -m1 version Cargo.toml | cut -d '"' -f 2)"
+
+      - name: Create Tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a "release-${{ steps.get_version.outputs.version }}" -m "Release ${{ steps.get_version.outputs.version }} [skip ci]"
+          git push origin "release-${{ steps.get_version.outputs.version }}"
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Log Artifact Paths
+        run: |
+          echo "Artifacts directory structure:"
+          ls -l
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ steps.get_version.outputs.version }}
+          files: |
+            artifacts/artifact-macos/envsub-rs-macos.zip
+            artifacts/artifact-ubuntu/envsub-rs-ubuntu.zip
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

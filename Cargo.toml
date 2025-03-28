@@ -1,0 +1,11 @@
+[package]
+name = "envsub-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.34", features = ["derive"] }
+regex = "1.11.1"
+
+[dev-dependencies]
+temp-env = "0.3.6"
