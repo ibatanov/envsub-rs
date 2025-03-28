@@ -3,7 +3,25 @@
 `envsub-rs` — это утилита для подстановки переменных окружения в текстовые файлы.
 
 ## Установка
-todo
+*macos*
+```bash
+curl -LO https://github.com/ibatanov/envsub-rs/releases/download/release-0.1.0/envsub-rs-macos.zip && unzip envsub-rs-macos.zip && sudo mv envsub-rs /usr/local/bin/ && chmod +x /usr/local/bin/envsub-rs
+```
+*ubuntu*
+```bash
+wget https://github.com/ibatanov/envsub-rs/releases/download/release-0.1.0/envsub-rs-ubuntu.zip && unzip envsub-rs-ubuntu.zip && sudo mv envsub-rs /usr/local/bin/ && chmod +x /usr/local/bin/envsub-rs
+```
+
+После выполнения команды проверьте установку:
+```bash
+envsub-rs --version
+envsub-rs --help
+```
+
+Удалите архив `envsub-rs-*.zip`, если он остался в текущей директории:
+```bash
+rm envsub-rs-*.zip
+```
 
 ## Использование
 ```
